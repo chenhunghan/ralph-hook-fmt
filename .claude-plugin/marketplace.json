@@ -1,19 +1,16 @@
 {
   "name": "ralph-hook-fmt",
-  "displayName": "Ralph Hook Formatter",
-  "description": "Auto-format files on Write/Edit operations for Claude Code",
-  "categories": ["formatting", "developer-tools"],
-  "keywords": ["format", "formatter", "prettier", "biome", "rustfmt", "black", "gofmt"],
-  "author": {
-    "name": "chenhunghan",
-    "url": "https://github.com/chenhunghan"
+  "metadata": {
+    "description": "Auto-format files on Write/Edit operations for Claude Code"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/chenhunghan/ralph-hook-fmt.git"
+  "owner": {
+    "name": "Hung-Han Chen",
+    "email": "chenhungh@gmail.com"
   },
-  "license": "MIT",
-  "engines": {
-    "claude-code": ">=1.0.0"
-  }
+  "plugins": [
+    {
+      "name": "ralph-hook-fmt",
+      "source": "./"
+    }
+  ]
 }

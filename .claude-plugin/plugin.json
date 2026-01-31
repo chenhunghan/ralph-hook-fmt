@@ -1,7 +1,21 @@
 {
   "name": "ralph-hook-fmt",
+  "description": "Zero dependencies lighting fast universal format hook for your agent loops",
   "version": "0.2.0",
-  "description": "Auto-format files on Write/Edit operations",
-  "author": "chenhunghan",
-  "repository": "https://github.com/chenhunghan/ralph-hook-fmt"
+  "author": {
+    "name": "Hung-Han Chen",
+    "email": "chenhungh@gmail.com"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/chenhunghan/ralph-hook-fmt",
+  "keywords": [
+    "format",
+    "formatter",
+    "prettier",
+    "biome",
+    "rustfmt",
+    "black",
+    "gofmt",
+    "hooks"
+  ]
 }
