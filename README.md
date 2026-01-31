@@ -20,15 +20,15 @@ See lint hook: [ralph-hook-lint](https://github.com/chenhunghan/ralph-hook-lint)
 | Python                | `ruff format` > `black` > `autopep8` > `yapf`                             |
 | Java                  | `spotless` (Maven/Gradle) > `google-java-format` > `palantir-java-format` |
 | Go                    | `goimports + gofumpt` > `gofumpt` > `goimports` > `gofmt`                 |
-| JSON/JSONC/JSON5      | `oxfmt` (project-local > global)                                          |
-| YAML                  | `oxfmt` (project-local > global)                                          |
-| TOML                  | `oxfmt` (project-local > global)                                          |
-| HTML                  | `oxfmt` (project-local > global)                                          |
-| Vue                   | `oxfmt` (project-local > global)                                          |
-| CSS/SCSS/Less         | `oxfmt` (project-local > global)                                          |
-| Markdown/MDX          | `oxfmt` (project-local > global)                                          |
-| GraphQL               | `oxfmt` (project-local > global)                                          |
-| Handlebars            | `oxfmt` (project-local > global)                                          |
+| JSON/JSONC/JSON5      | `oxfmt`                                                                   |
+| YAML                  | `oxfmt`                                                                   |
+| TOML                  | `oxfmt`                                                                   |
+| HTML                  | `oxfmt`                                                                   |
+| Vue                   | `oxfmt`                                                                   |
+| CSS/SCSS/Less         | `oxfmt`                                                                   |
+| Markdown/MDX          | `oxfmt`                                                                   |
+| GraphQL               | `oxfmt`                                                                   |
+| Handlebars            | `oxfmt`                                                                   |
 
 ## Installation
 
@@ -37,29 +37,19 @@ claude plugin marketplace add chenhunghan/ralph-hook-fmt
 claude plugin install ralph-hook-fmt
 ```
 
-## Update
+## Update Plugin
 
 ```bash
-# Update the marketplace first (fetches latest from GitHub)
 claude plugin marketplace update ralph-hook-fmt
-
-# Then update the plugin
 claude plugin update ralph-hook-fmt@ralph-hook-fmt
 ```
 
 ## Development
 
 ```bash
-# Run tests
 make test
-
-# Run linting
 make lint
-
-# Format code
 make fmt
-
-# Run all CI checks
 make ci
 ```
 
