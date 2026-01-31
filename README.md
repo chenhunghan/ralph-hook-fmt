@@ -15,7 +15,7 @@ See lint hook: [ralph-hook-lint](https://github.com/chenhunghan/ralph-hook-lint)
 
 | Language              | Formatters (Priority Order)                                               |
 | --------------------- | ------------------------------------------------------------------------- |
-| JavaScript/TypeScript | `biome format` > `prettier` > `dprint`                                    |
+| JavaScript/TypeScript | `oxfmt` > `biome format` > `prettier` > `dprint`                          |
 | Rust                  | `rustfmt` (via `cargo fmt`)                                               |
 | Python                | `ruff format` > `black` > `autopep8` > `yapf`                             |
 | Java                  | `spotless` (Maven/Gradle) > `google-java-format` > `palantir-java-format` |

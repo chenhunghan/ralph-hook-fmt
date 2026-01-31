@@ -152,9 +152,10 @@ fn test_javascript_in_node_project_detects_formatters() {
     assert!(output.contains("continue"));
     assert!(output.contains("true"));
 
-    // Should detect biome, prettier, dprint, or report no formatter
+    // Should detect oxfmt, biome, prettier, dprint, or report no formatter
     assert!(
-        output.contains("biome")
+        output.contains("oxfmt")
+            || output.contains("biome")
             || output.contains("prettier")
             || output.contains("dprint")
             || output.contains("No formatter"),
@@ -530,6 +531,36 @@ fn create_mock_formatter(path: &std::path::Path, name: &str) {
 }
 
 #[test]
+fn test_monorepo_uses_package_level_oxfmt_over_biome() {
+    let temp_dir = TempDir::new().unwrap();
+    let project_dir = temp_dir.path();
+
+    // Create monorepo root with biome
+    fs::write(project_dir.join("package.json"), r#"{"name": "monorepo"}"#).unwrap();
+    create_mock_formatter(project_dir, "biome");
+
+    // Create package with oxfmt (highest priority)
+    let pkg_dir = project_dir.join("packages/my-pkg");
+    fs::create_dir_all(&pkg_dir).unwrap();
+    fs::write(pkg_dir.join("package.json"), r#"{"name": "my-pkg"}"#).unwrap();
+    create_mock_formatter(&pkg_dir, "oxfmt");
+
+    let file_path = pkg_dir.join("index.js");
+    fs::write(&file_path, "const x = 1;").unwrap();
+
+    let output = run_hook_with_input(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    // Should use oxfmt from the package (highest priority)
+    assert!(
+        output.contains("oxfmt"),
+        "Should use oxfmt from package level: {}",
+        output
+    );
+}
+
+#[test]
 fn test_monorepo_uses_package_level_biome_over_root_prettier() {
     let temp_dir = TempDir::new().unwrap();
     let project_dir = temp_dir.path();
@@ -538,7 +569,7 @@ fn test_monorepo_uses_package_level_biome_over_root_prettier() {
     fs::write(project_dir.join("package.json"), r#"{"name": "monorepo"}"#).unwrap();
     create_mock_formatter(project_dir, "prettier");
 
-    // Create package with biome (higher priority)
+    // Create package with biome (higher priority than prettier)
     let pkg_dir = project_dir.join("packages/my-pkg");
     fs::create_dir_all(&pkg_dir).unwrap();
     fs::write(pkg_dir.join("package.json"), r#"{"name": "my-pkg"}"#).unwrap();

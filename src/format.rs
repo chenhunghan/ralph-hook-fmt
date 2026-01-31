@@ -79,8 +79,15 @@ pub fn format_file(file_path: &Path) -> FormatResult {
 fn format_javascript(file_path: &Path) -> FormatResult {
     let project_root = find_node_root(file_path);
 
-    // Try biome first
+    // Try local formatters first (in priority order)
     if let Some(ref root) = project_root {
+        // Try oxfmt first (fastest)
+        let oxfmt_path = root.join("node_modules/.bin/oxfmt");
+        if oxfmt_path.exists() {
+            return run_formatter("oxfmt", &oxfmt_path, &["--write"], file_path, None);
+        }
+
+        // Try biome
         let biome_path = root.join("node_modules/.bin/biome");
         if biome_path.exists() {
             return run_formatter(
@@ -91,17 +98,19 @@ fn format_javascript(file_path: &Path) -> FormatResult {
                 None,
             );
         }
-    }
 
-    // Try prettier
-    if let Some(ref root) = project_root {
+        // Try prettier
         let prettier_path = root.join("node_modules/.bin/prettier");
         if prettier_path.exists() {
             return run_formatter("prettier", &prettier_path, &["--write"], file_path, None);
         }
     }
 
-    // Try dprint (global)
+    // Fall back to global formatters
+    if command_exists("oxfmt") {
+        return run_formatter_cmd("oxfmt", &["--write"], file_path, None);
+    }
+
     if command_exists("dprint") {
         return run_formatter_cmd("dprint", &["fmt"], file_path, None);
     }
