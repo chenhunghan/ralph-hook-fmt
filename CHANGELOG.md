@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.2.0...ralph-hook-fmt-v0.3.0) (2026-01-31)
+
+
+### Features
+
+* improve go formatter selection order ([a792e89](https://github.com/chenhunghan/ralph-hook-fmt/commit/a792e89abd293bd8195d55a4ed07629a2ef0e285))
+
+
+### Bug Fixes
+
+* fix plugin marketplace/plugin.json format ([10131fd](https://github.com/chenhunghan/ralph-hook-fmt/commit/10131fd88814cdfe2f6a4cf644e3a8c54a284e45))
+
 ## [0.2.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.1.0...ralph-hook-fmt-v0.2.0) (2026-01-31)
 
 
