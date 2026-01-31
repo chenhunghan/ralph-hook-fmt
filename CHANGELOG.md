@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.3.0...ralph-hook-fmt-v0.4.0) (2026-01-31)
+
+
+### Features
+
+* prioritize oxfmt in JavaScript/TypeScript formatting and update tests ([e1b746b](https://github.com/chenhunghan/ralph-hook-fmt/commit/e1b746baefe0f99c171726d10355a65ff2cafd96))
+
 ## [0.3.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.2.0...ralph-hook-fmt-v0.3.0) (2026-01-31)
 
 
