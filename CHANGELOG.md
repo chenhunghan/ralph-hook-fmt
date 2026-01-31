@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.1.0...ralph-hook-fmt-v0.2.0) (2026-01-31)
+
+
+### Features
+
+* init impl of ralph-hook-fmt ([315f1d4](https://github.com/chenhunghan/ralph-hook-fmt/commit/315f1d43052418577ec43dc9179b435d233e5367))
+
 ## [0.1.0](https://github.com/chenhunghan/ralph-hook-fmt/releases/tag/v0.1.0) (Unreleased)
 
 ### Features
