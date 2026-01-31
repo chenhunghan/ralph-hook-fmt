@@ -2,6 +2,8 @@
 
 A formatting hook plugin for Claude Code that automatically formats files after Write/Edit operations.
 
+See lint hook: [ralph-hook-lint](https://github.com/chenhunghan/ralph-hook-lint) 
+
 ## Features
 
 - **Automatic formatting**: Files are formatted immediately after Write/Edit operations
