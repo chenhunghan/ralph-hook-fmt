@@ -1,69 +1,82 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+set -e
 
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$0")")}"
 BIN_DIR="${PLUGIN_ROOT}/bin"
 BINARY_NAME="ralph-hook-fmt"
-BINARY_PATH="${BIN_DIR}/${BINARY_NAME}"
+REPO="chenhunghan/ralph-hook-fmt"
 
-# Check if binary already exists and is executable
-if [[ -x "${BINARY_PATH}" ]]; then
+# Get latest version from GitHub API
+# Tag format is "ralph-hook-fmt-v0.1.0", extract just the version part
+get_latest_version() {
+  curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | \
+    grep '"tag_name"' | sed -E 's/.*"tag_name": *"[^"]*-v([0-9]+\.[0-9]+\.[0-9]+)".*/\1/'
+}
+
+# Get installed version from binary
+get_installed_version() {
+  if [[ -x "$BIN_DIR/$BINARY_NAME" ]]; then
+    "$BIN_DIR/$BINARY_NAME" --version 2>/dev/null || echo ""
+  else
+    echo ""
+  fi
+}
+
+INSTALLED_VERSION=$(get_installed_version)
+LATEST_VERSION=$(get_latest_version)
+
+# Skip if binary exists and is up to date
+if [[ -x "$BIN_DIR/$BINARY_NAME" ]] && [[ -n "$INSTALLED_VERSION" ]] && [[ -n "$LATEST_VERSION" ]]; then
+  # Normalize versions (remove 'v' prefix if present for comparison)
+  INSTALLED_NORMALIZED="${INSTALLED_VERSION#v}"
+  LATEST_NORMALIZED="${LATEST_VERSION#v}"
+
+  if [[ "$INSTALLED_NORMALIZED" == "$LATEST_NORMALIZED" ]]; then
     exit 0
+  fi
+  echo "{\"continue\": true, \"systemMessage\": \"fmt-hook: updating from $INSTALLED_VERSION to $LATEST_VERSION\"}"
 fi
 
-# Determine OS and architecture
-OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-ARCH="$(uname -m)"
+# Skip if we couldn't fetch the latest version (network issue) and binary exists
+if [[ -z "$LATEST_VERSION" ]] && [[ -x "$BIN_DIR/$BINARY_NAME" ]]; then
+  exit 0
+fi
 
-case "${OS}" in
-    darwin)
-        case "${ARCH}" in
-            arm64) TARGET="aarch64-apple-darwin" ;;
-            x86_64) TARGET="x86_64-apple-darwin" ;;
-            *) echo "Unsupported architecture: ${ARCH}" >&2; exit 1 ;;
-        esac
-        ;;
-    linux)
-        case "${ARCH}" in
-            aarch64|arm64) TARGET="aarch64-unknown-linux-gnu" ;;
-            x86_64) TARGET="x86_64-unknown-linux-gnu" ;;
-            *) echo "Unsupported architecture: ${ARCH}" >&2; exit 1 ;;
-        esac
-        ;;
-    *)
-        echo "Unsupported OS: ${OS}" >&2
-        exit 1
-        ;;
+mkdir -p "$BIN_DIR"
+
+# Detect platform
+OS=$(uname -s)
+ARCH=$(uname -m)
+
+case "$OS-$ARCH" in
+  Darwin-arm64)
+    PLATFORM="aarch64-apple-darwin"
+    ;;
+  Darwin-x86_64)
+    PLATFORM="x86_64-apple-darwin"
+    ;;
+  Linux-x86_64)
+    PLATFORM="x86_64-unknown-linux-gnu"
+    ;;
+  Linux-aarch64)
+    PLATFORM="aarch64-unknown-linux-gnu"
+    ;;
+  *)
+    echo "{\"continue\": true, \"systemMessage\": \"fmt-hook: unsupported platform $OS-$ARCH\"}"
+    exit 0
+    ;;
 esac
 
-# Get the latest release version from GitHub
-REPO="chenhunghan/ralph-hook-fmt"
-LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-
-if [[ -z "${LATEST_RELEASE}" ]]; then
-    echo "Failed to fetch latest release version" >&2
-    exit 1
-fi
-
-# Download URL
-TARBALL_NAME="${BINARY_NAME}-${TARGET}.tar.gz"
-DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_RELEASE}/${TARBALL_NAME}"
-
-# Create bin directory
-mkdir -p "${BIN_DIR}"
+# Get latest release URL
+RELEASE_URL="https://github.com/${REPO}/releases/latest/download/${BINARY_NAME}-${PLATFORM}.tar.gz"
 
 # Download and extract
-TEMP_DIR=$(mktemp -d)
-trap 'rm -rf "${TEMP_DIR}"' EXIT
+cd "$BIN_DIR"
+if curl -fsSL "$RELEASE_URL" | tar xz 2>/dev/null; then
+  chmod +x "$BIN_DIR/$BINARY_NAME"
+  echo "{\"continue\": true, \"systemMessage\": \"fmt-hook: binary installed ($LATEST_VERSION)\"}"
+else
+  echo "{\"continue\": true, \"systemMessage\": \"fmt-hook: failed to download binary from $RELEASE_URL\"}"
+fi
 
-echo "Downloading ${BINARY_NAME} ${LATEST_RELEASE} for ${TARGET}..."
-curl -sL "${DOWNLOAD_URL}" -o "${TEMP_DIR}/${TARBALL_NAME}"
-
-echo "Extracting..."
-tar -xzf "${TEMP_DIR}/${TARBALL_NAME}" -C "${TEMP_DIR}"
-
-# Move binary to bin directory
-mv "${TEMP_DIR}/${BINARY_NAME}" "${BINARY_PATH}"
-chmod +x "${BINARY_PATH}"
-
-echo "${BINARY_NAME} ${LATEST_RELEASE} installed successfully"
+exit 0

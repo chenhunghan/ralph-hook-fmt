@@ -8,6 +8,13 @@ use extract::extract_file_path;
 use format::format_file;
 
 fn main() {
+    // Handle --version flag
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() > 1 && args[1] == "--version" {
+        println!("{}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
     // Read JSON input from stdin
     let mut input = String::new();
     if io::stdin().read_to_string(&mut input).is_err() {
