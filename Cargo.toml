@@ -1,0 +1,19 @@
+[package]
+name = "ralph-hook-fmt"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Auto-format files on Write/Edit operations"
+authors = ["chenhunghan"]
+license = "MIT"
+repository = "https://github.com/chenhunghan/ralph-hook-fmt"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

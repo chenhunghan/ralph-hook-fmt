@@ -1,0 +1,7 @@
+{
+  "name": "ralph-hook-fmt",
+  "version": "0.1.0",
+  "description": "Auto-format files on Write/Edit operations",
+  "author": "chenhunghan",
+  "repository": "https://github.com/chenhunghan/ralph-hook-fmt"
+}
