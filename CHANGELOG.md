@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.4.0...ralph-hook-fmt-v0.4.1) (2026-01-31)
+
+
+### Bug Fixes
+
+* fix auto update in setup.sh ([4105823](https://github.com/chenhunghan/ralph-hook-fmt/commit/410582370f7ac1b520f3824e2ede22238131e580))
+
 ## [0.4.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.3.0...ralph-hook-fmt-v0.4.0) (2026-01-31)
 
 
