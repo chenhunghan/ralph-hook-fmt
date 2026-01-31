@@ -245,7 +245,26 @@ fn format_go(file_path: &Path) -> FormatResult {
     let project_root = find_go_root(file_path);
     let cwd = project_root.as_deref();
 
-    // Try goimports first (adds imports and formats)
+    // Best: goimports (imports) + gofumpt (strict formatting)
+    if command_exists("goimports") && command_exists("gofumpt") {
+        let result = run_formatter_cmd("goimports", &["-w"], file_path, cwd);
+        if result.formatted {
+            let result2 = run_formatter_cmd("gofumpt", &["-w"], file_path, cwd);
+            if result2.formatted {
+                return FormatResult::success("goimports + gofumpt");
+            }
+        }
+    }
+
+    // Try gofumpt alone (strict formatting, no import management)
+    if command_exists("gofumpt") {
+        let result = run_formatter_cmd("gofumpt", &["-w"], file_path, cwd);
+        if result.formatted {
+            return result;
+        }
+    }
+
+    // Try goimports alone (imports + basic formatting)
     if command_exists("goimports") {
         let result = run_formatter_cmd("goimports", &["-w"], file_path, cwd);
         if result.formatted {
@@ -253,7 +272,7 @@ fn format_go(file_path: &Path) -> FormatResult {
         }
     }
 
-    // Fallback to gofmt
+    // Fallback to gofmt (always available with Go installation)
     if command_exists("gofmt") {
         return run_formatter_cmd("gofmt", &["-w"], file_path, cwd);
     }

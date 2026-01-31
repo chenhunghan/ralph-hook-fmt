@@ -19,7 +19,7 @@ See lint hook: [ralph-hook-lint](https://github.com/chenhunghan/ralph-hook-lint)
 | Rust                  | `rustfmt` (via `cargo fmt`)                                               |
 | Python                | `ruff format` > `black` > `autopep8` > `yapf`                             |
 | Java                  | `spotless` (Maven/Gradle) > `google-java-format` > `palantir-java-format` |
-| Go                    | `goimports` > `gofmt`                                                     |
+| Go                    | `goimports + gofumpt` > `gofumpt` > `goimports` > `gofmt`                 |
 | JSON/JSONC/JSON5      | `oxfmt` (project-local > global)                                          |
 | YAML                  | `oxfmt` (project-local > global)                                          |
 | TOML                  | `oxfmt` (project-local > global)                                          |

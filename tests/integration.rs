@@ -245,10 +245,10 @@ fn test_go_with_module_uses_gofmt() {
     assert!(output.contains("continue"));
     assert!(output.contains("true"));
 
-    // Should detect goimports or gofmt
-    if output.contains("goimports") || output.contains("gofmt") {
+    // Should detect goimports, gofumpt, or gofmt
+    if output.contains("goimports") || output.contains("gofumpt") || output.contains("gofmt") {
         let formatted = fs::read_to_string(&file_path).unwrap();
-        // gofmt adds proper spacing
+        // gofmt/gofumpt adds proper spacing
         assert!(
             formatted != unformatted || formatted.contains("x := 1"),
             "File should be formatted"
@@ -685,10 +685,10 @@ fn test_go_workspace_with_nested_modules() {
     assert!(output.contains("continue"));
     assert!(output.contains("true"));
 
-    // Should detect goimports or gofmt
-    if output.contains("goimports") || output.contains("gofmt") {
+    // Should detect goimports, gofumpt, or gofmt
+    if output.contains("goimports") || output.contains("gofumpt") || output.contains("gofmt") {
         let formatted = fs::read_to_string(&file_path).unwrap();
-        // Check that formatting occurred (gofmt adds space around :=)
+        // Check that formatting occurred (gofmt/gofumpt adds space around :=)
         if formatted != unformatted {
             assert!(
                 formatted.contains("x := 1") || formatted.contains("x := "),
