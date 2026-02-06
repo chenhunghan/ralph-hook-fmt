@@ -50,6 +50,17 @@ impl FormatResult {
 
 /// Format a file based on its extension
 pub fn format_file(file_path: &Path) -> FormatResult {
+    // Skip package.json - formatting can reorder keys and break package managers
+    if let Some(name) = file_path.file_name().and_then(|n| n.to_str()) {
+        if name == "package.json" {
+            return FormatResult {
+                formatted: false,
+                formatter: None,
+                message: "Skipped package.json".to_string(),
+            };
+        }
+    }
+
     let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
     match ext {
@@ -397,5 +408,12 @@ mod tests {
         let result = format_file(Path::new("/path/to/file.unknown"));
         assert!(!result.formatted);
         assert!(result.message.contains("Unsupported"));
+    }
+
+    #[test]
+    fn test_skip_package_json() {
+        let result = format_file(Path::new("/path/to/package.json"));
+        assert!(!result.formatted);
+        assert!(result.message.contains("Skipped package.json"));
     }
 }
