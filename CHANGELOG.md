@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.4.1...ralph-hook-fmt-v0.4.2) (2026-02-06)
+
+
+### Bug Fixes
+
+* skip formatting package.json ([86c925a](https://github.com/chenhunghan/ralph-hook-fmt/commit/86c925a866a1df717d5a6cf5b2b9676277b159c0))
+
 ## [0.4.1](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.4.0...ralph-hook-fmt-v0.4.1) (2026-01-31)
 
 
