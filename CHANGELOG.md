@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.4.2...ralph-hook-fmt-v0.5.0) (2026-02-07)
+
+
+### Features
+
+* add --debug disabled by default ([f8e5b5f](https://github.com/chenhunghan/ralph-hook-fmt/commit/f8e5b5f27391b86f9e3938c2b0639fbe3331e029))
+
+
+### Bug Fixes
+
+* fix auto update ([aa93bf7](https://github.com/chenhunghan/ralph-hook-fmt/commit/aa93bf7c3e287c6dfe0d5c02ac3e31abee6b5d6e))
+
 ## [0.4.2](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.4.1...ralph-hook-fmt-v0.4.2) (2026-02-06)
 
 
