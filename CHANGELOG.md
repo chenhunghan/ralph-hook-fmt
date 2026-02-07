@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.5.0...ralph-hook-fmt-v0.5.1) (2026-02-07)
+
+
+### Bug Fixes
+
+* fix pacakge name is setup.sh ([9ca9865](https://github.com/chenhunghan/ralph-hook-fmt/commit/9ca9865988a57a627eb64e582bad2e533b3e638f))
+
 ## [0.5.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.4.2...ralph-hook-fmt-v0.5.0) (2026-02-07)
 
 
