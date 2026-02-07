@@ -44,6 +44,28 @@ claude plugin marketplace update ralph-hook-fmt
 claude plugin update ralph-hook-fmt@ralph-hook-fmt
 ```
 
+## Debug Mode
+
+By default, the hook runs without `--debug`:
+
+```json
+"command": "${CLAUDE_PLUGIN_ROOT}/bin/ralph-hook-fmt"
+```
+
+Without `--debug`, continue responses are compact (`{"continue":true}`) and do not include `systemMessage`.
+
+To see formatter diagnostics in `systemMessage` (for example formatter selected/skipped/error details), manually add `--debug` in `hooks.json`:
+
+1. Open `~/.claude/plugins/ralph-hook-fmt/hooks/hooks.json`
+2. Change the command from:
+   ```json
+   "command": "${CLAUDE_PLUGIN_ROOT}/bin/ralph-hook-fmt"
+   ```
+   to:
+   ```json
+   "command": "${CLAUDE_PLUGIN_ROOT}/bin/ralph-hook-fmt --debug"
+   ```
+
 ## Development
 
 ```bash

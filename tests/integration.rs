@@ -4,8 +4,17 @@ use std::process::{Command, Stdio};
 use tempfile::TempDir;
 
 fn run_hook_with_input(input: &str) -> String {
-    let mut child = Command::new("cargo")
-        .args(["run", "--quiet"])
+    run_hook_with_input_with_args(input, &["--debug"])
+}
+
+fn run_hook_with_input_no_debug(input: &str) -> String {
+    run_hook_with_input_with_args(input, &[])
+}
+
+fn run_hook_with_input_with_args(input: &str, args: &[&str]) -> String {
+    let binary = env!("CARGO_BIN_EXE_ralph-hook-fmt");
+    let mut child = Command::new(binary)
+        .args(args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -68,6 +77,27 @@ fn test_invalid_json_input() {
     let output = run_hook_with_input("not valid json");
     assert!(output.contains("continue"));
     assert!(output.contains("true"));
+}
+
+#[test]
+fn test_no_debug_omits_system_message_on_continue() {
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("file.xyz");
+    fs::write(&file_path, "content").unwrap();
+
+    let output = run_hook_with_input_no_debug(&make_hook_input(&file_path));
+    assert_eq!(output.trim(), r#"{"continue":true}"#);
+}
+
+#[test]
+fn test_debug_includes_system_message_on_continue() {
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("file.xyz");
+    fs::write(&file_path, "content").unwrap();
+
+    let output = run_hook_with_input(&make_hook_input(&file_path));
+    assert!(output.contains("systemMessage"));
+    assert!(output.contains("Unsupported"));
 }
 
 // ============================================================================

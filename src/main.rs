@@ -2,23 +2,27 @@ mod extract;
 mod format;
 mod project;
 
+use std::env;
 use std::io::{self, Read};
 
 use extract::extract_file_path;
 use format::format_file;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
     // Handle --version flag
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() > 1 && args[1] == "--version" {
+    if args.iter().any(|a| a == "--version" || a == "-V") {
         println!("{}", env!("CARGO_PKG_VERSION"));
         return;
     }
 
+    let debug = args.iter().any(|a| a == "--debug");
+
     // Read JSON input from stdin
     let mut input = String::new();
     if io::stdin().read_to_string(&mut input).is_err() {
-        print_response(true, "Failed to read input");
+        print_response(debug, true, "Failed to read input");
         return;
     }
 
@@ -26,7 +30,7 @@ fn main() {
     let file_path = match extract_file_path(&input) {
         Some(path) => path,
         None => {
-            print_response(true, "Could not extract file path from input");
+            print_response(debug, true, "Could not extract file path from input");
             return;
         }
     };
@@ -34,6 +38,7 @@ fn main() {
     // Check if file exists
     if !file_path.exists() {
         print_response(
+            debug,
             true,
             &format!("File does not exist: {}", file_path.display()),
         );
@@ -46,20 +51,37 @@ fn main() {
     // Build the response message
     let message = format!("[ralph-hook-fmt] {}", result.message);
 
-    print_response(true, &message);
+    print_response(debug, true, &message);
 }
 
-fn print_response(continue_execution: bool, message: &str) {
-    // Escape special characters in the message for JSON
-    let escaped_message = message
+fn escape_json(message: &str) -> String {
+    message
         .replace('\\', "\\\\")
         .replace('"', "\\\"")
         .replace('\n', "\\n")
         .replace('\r', "\\r")
-        .replace('\t', "\\t");
+        .replace('\t', "\\t")
+}
 
-    println!(
-        r#"{{"continue":{},"systemMessage":"{}"}}"#,
-        continue_execution, escaped_message
-    );
+fn print_response(debug: bool, continue_execution: bool, message: &str) {
+    if continue_execution && !debug {
+        println!("{{\"continue\":true}}");
+        return;
+    }
+
+    let escaped_message = escape_json(message);
+
+    if continue_execution {
+        println!(
+            r#"{{"continue":true,"systemMessage":"{}"}}"#,
+            escaped_message
+        );
+    } else if debug {
+        println!(
+            r#"{{"decision":"block","reason":"{}","systemMessage":"{}"}}"#,
+            escaped_message, escaped_message
+        );
+    } else {
+        println!(r#"{{"decision":"block","reason":"{}"}}"#, escaped_message);
+    }
 }
