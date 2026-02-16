@@ -3,6 +3,7 @@ use std::process::Command;
 
 use crate::project::{
     find_cargo_root, find_go_root, find_java_root, find_node_root, find_project_root,
+    find_python_root,
 };
 
 /// Result of a formatting operation
@@ -49,7 +50,7 @@ impl FormatResult {
 }
 
 /// Format a file based on its extension
-pub fn format_file(file_path: &Path) -> FormatResult {
+pub fn format_file(file_path: &Path, project_only: bool) -> FormatResult {
     // Skip package.json - formatting can reorder keys and break package managers
     if let Some(name) = file_path.file_name().and_then(|n| n.to_str()) {
         if name == "package.json" {
@@ -64,30 +65,30 @@ pub fn format_file(file_path: &Path) -> FormatResult {
     let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
     match ext {
-        "js" | "jsx" | "ts" | "tsx" | "mjs" | "cjs" => format_javascript(file_path),
-        "rs" => format_rust(file_path),
-        "py" | "pyi" => format_python(file_path),
-        "java" => format_java(file_path),
-        "go" => format_go(file_path),
+        "js" | "jsx" | "ts" | "tsx" | "mjs" | "cjs" => format_javascript(file_path, project_only),
+        "rs" => format_rust(file_path, project_only),
+        "py" | "pyi" => format_python(file_path, project_only),
+        "java" => format_java(file_path, project_only),
+        "go" => format_go(file_path, project_only),
         // oxfmt-supported formats
-        "json" | "jsonc" | "json5" => format_with_oxfmt(file_path, "JSON"),
-        "yaml" | "yml" => format_with_oxfmt(file_path, "YAML"),
-        "toml" => format_with_oxfmt(file_path, "TOML"),
-        "html" | "htm" => format_with_oxfmt(file_path, "HTML"),
-        "vue" => format_with_oxfmt(file_path, "Vue"),
-        "css" => format_with_oxfmt(file_path, "CSS"),
-        "scss" => format_with_oxfmt(file_path, "SCSS"),
-        "less" => format_with_oxfmt(file_path, "Less"),
-        "md" | "markdown" => format_with_oxfmt(file_path, "Markdown"),
-        "mdx" => format_with_oxfmt(file_path, "MDX"),
-        "graphql" | "gql" => format_with_oxfmt(file_path, "GraphQL"),
-        "hbs" | "handlebars" => format_with_oxfmt(file_path, "Handlebars"),
+        "json" | "jsonc" | "json5" => format_with_oxfmt(file_path, "JSON", project_only),
+        "yaml" | "yml" => format_with_oxfmt(file_path, "YAML", project_only),
+        "toml" => format_with_oxfmt(file_path, "TOML", project_only),
+        "html" | "htm" => format_with_oxfmt(file_path, "HTML", project_only),
+        "vue" => format_with_oxfmt(file_path, "Vue", project_only),
+        "css" => format_with_oxfmt(file_path, "CSS", project_only),
+        "scss" => format_with_oxfmt(file_path, "SCSS", project_only),
+        "less" => format_with_oxfmt(file_path, "Less", project_only),
+        "md" | "markdown" => format_with_oxfmt(file_path, "Markdown", project_only),
+        "mdx" => format_with_oxfmt(file_path, "MDX", project_only),
+        "graphql" | "gql" => format_with_oxfmt(file_path, "GraphQL", project_only),
+        "hbs" | "handlebars" => format_with_oxfmt(file_path, "Handlebars", project_only),
         _ => FormatResult::unsupported(ext),
     }
 }
 
 /// Format JavaScript/TypeScript files
-fn format_javascript(file_path: &Path) -> FormatResult {
+fn format_javascript(file_path: &Path, project_only: bool) -> FormatResult {
     let project_root = find_node_root(file_path);
 
     // Try local formatters first (in priority order)
@@ -117,20 +118,22 @@ fn format_javascript(file_path: &Path) -> FormatResult {
         }
     }
 
-    // Fall back to global formatters
-    if command_exists("oxfmt") {
-        return run_formatter_cmd("oxfmt", &["--write"], file_path, None);
-    }
+    if !project_only {
+        // Fall back to global formatters
+        if command_exists("oxfmt") {
+            return run_formatter_cmd("oxfmt", &["--write"], file_path, None);
+        }
 
-    if command_exists("dprint") {
-        return run_formatter_cmd("dprint", &["fmt"], file_path, None);
+        if command_exists("dprint") {
+            return run_formatter_cmd("dprint", &["fmt"], file_path, None);
+        }
     }
 
     FormatResult::no_formatter("JavaScript/TypeScript")
 }
 
 /// Format Rust files
-fn format_rust(file_path: &Path) -> FormatResult {
+fn format_rust(file_path: &Path, project_only: bool) -> FormatResult {
     let project_root = find_cargo_root(file_path);
 
     // Try cargo fmt if in a Cargo project
@@ -152,45 +155,71 @@ fn format_rust(file_path: &Path) -> FormatResult {
         }
     }
 
-    // Fallback to rustfmt directly
-    if command_exists("rustfmt") {
-        return run_formatter_cmd("rustfmt", &[], file_path, None);
+    if !project_only {
+        // Fallback to rustfmt directly
+        if command_exists("rustfmt") {
+            return run_formatter_cmd("rustfmt", &[], file_path, None);
+        }
     }
 
     FormatResult::no_formatter("Rust")
 }
 
 /// Format Python files
-fn format_python(file_path: &Path) -> FormatResult {
-    // Try ruff format
-    if command_exists("ruff") {
-        let result = run_formatter_cmd("ruff", &["format"], file_path, None);
-        if result.formatted {
-            return result;
-        }
-    }
+fn format_python(file_path: &Path, project_only: bool) -> FormatResult {
+    let formatters = ["ruff", "black", "autopep8", "yapf"];
+    let formatter_args: &[&[&str]] = &[&["format"], &[], &["--in-place"], &["-i"]];
 
-    // Try black
-    if command_exists("black") {
-        let result = run_formatter_cmd("black", &[], file_path, None);
-        if result.formatted {
-            return result;
+    if project_only {
+        // In project-only mode, only check for formatters in local venv
+        if let Some(ref root) = find_python_root(file_path) {
+            let venv_dirs = [".venv", "venv"];
+            for (i, name) in formatters.iter().enumerate() {
+                for venv_dir in &venv_dirs {
+                    let formatter_path = root.join(venv_dir).join("bin").join(name);
+                    if formatter_path.exists() {
+                        return run_formatter(
+                            name,
+                            &formatter_path,
+                            formatter_args[i],
+                            file_path,
+                            None,
+                        );
+                    }
+                }
+            }
         }
-    }
-
-    // Try autopep8
-    if command_exists("autopep8") {
-        let result = run_formatter_cmd("autopep8", &["--in-place"], file_path, None);
-        if result.formatted {
-            return result;
+    } else {
+        // Try ruff format
+        if command_exists("ruff") {
+            let result = run_formatter_cmd("ruff", &["format"], file_path, None);
+            if result.formatted {
+                return result;
+            }
         }
-    }
 
-    // Try yapf
-    if command_exists("yapf") {
-        let result = run_formatter_cmd("yapf", &["-i"], file_path, None);
-        if result.formatted {
-            return result;
+        // Try black
+        if command_exists("black") {
+            let result = run_formatter_cmd("black", &[], file_path, None);
+            if result.formatted {
+                return result;
+            }
+        }
+
+        // Try autopep8
+        if command_exists("autopep8") {
+            let result = run_formatter_cmd("autopep8", &["--in-place"], file_path, None);
+            if result.formatted {
+                return result;
+            }
+        }
+
+        // Try yapf
+        if command_exists("yapf") {
+            let result = run_formatter_cmd("yapf", &["-i"], file_path, None);
+            if result.formatted {
+                return result;
+            }
         }
     }
 
@@ -198,7 +227,7 @@ fn format_python(file_path: &Path) -> FormatResult {
 }
 
 /// Format Java files
-fn format_java(file_path: &Path) -> FormatResult {
+fn format_java(file_path: &Path, project_only: bool) -> FormatResult {
     let project_root = find_java_root(file_path);
 
     if let Some(ref root) = project_root {
@@ -247,22 +276,29 @@ fn format_java(file_path: &Path) -> FormatResult {
         }
     }
 
-    // Try google-java-format
-    if command_exists("google-java-format") {
-        return run_formatter_cmd("google-java-format", &["--replace"], file_path, None);
-    }
+    if !project_only {
+        // Try google-java-format
+        if command_exists("google-java-format") {
+            return run_formatter_cmd("google-java-format", &["--replace"], file_path, None);
+        }
 
-    // Try palantir-java-format
-    if command_exists("palantir-java-format") {
-        return run_formatter_cmd("palantir-java-format", &["--replace"], file_path, None);
+        // Try palantir-java-format
+        if command_exists("palantir-java-format") {
+            return run_formatter_cmd("palantir-java-format", &["--replace"], file_path, None);
+        }
     }
 
     FormatResult::no_formatter("Java")
 }
 
 /// Format Go files
-fn format_go(file_path: &Path) -> FormatResult {
+fn format_go(file_path: &Path, project_only: bool) -> FormatResult {
     let project_root = find_go_root(file_path);
+
+    if project_only && project_root.is_none() {
+        return FormatResult::no_formatter("Go");
+    }
+
     let cwd = project_root.as_deref();
 
     // Best: goimports (imports) + gofumpt (strict formatting)
@@ -301,7 +337,7 @@ fn format_go(file_path: &Path) -> FormatResult {
 }
 
 /// Format files using oxfmt (JSON, YAML, TOML, HTML, Vue, CSS, SCSS, Less, Markdown, MDX, GraphQL, Handlebars)
-fn format_with_oxfmt(file_path: &Path, language: &str) -> FormatResult {
+fn format_with_oxfmt(file_path: &Path, language: &str, project_only: bool) -> FormatResult {
     let project_root = find_project_root(file_path);
 
     // Try project-local oxfmt first (node_modules/.bin/oxfmt)
@@ -312,9 +348,11 @@ fn format_with_oxfmt(file_path: &Path, language: &str) -> FormatResult {
         }
     }
 
-    // Fallback to global oxfmt
-    if command_exists("oxfmt") {
-        return run_formatter_cmd("oxfmt", &["--write"], file_path, None);
+    if !project_only {
+        // Fallback to global oxfmt
+        if command_exists("oxfmt") {
+            return run_formatter_cmd("oxfmt", &["--write"], file_path, None);
+        }
     }
 
     FormatResult::no_formatter(language)
@@ -405,14 +443,14 @@ mod tests {
 
     #[test]
     fn test_unsupported_extension() {
-        let result = format_file(Path::new("/path/to/file.unknown"));
+        let result = format_file(Path::new("/path/to/file.unknown"), false);
         assert!(!result.formatted);
         assert!(result.message.contains("Unsupported"));
     }
 
     #[test]
     fn test_skip_package_json() {
-        let result = format_file(Path::new("/path/to/package.json"));
+        let result = format_file(Path::new("/path/to/package.json"), false);
         assert!(!result.formatted);
         assert!(result.message.contains("Skipped package.json"));
     }

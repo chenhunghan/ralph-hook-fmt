@@ -67,7 +67,6 @@ pub fn find_node_root(file_path: &Path) -> Option<PathBuf> {
 }
 
 /// Find the nearest Python project root (pyproject.toml or setup.py)
-#[allow(dead_code)]
 pub fn find_python_root(file_path: &Path) -> Option<PathBuf> {
     let mut current = file_path.parent()?;
 

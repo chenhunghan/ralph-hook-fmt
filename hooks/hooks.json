@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/bin/ralph-hook-fmt"
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/ralph-hook-fmt --project-only"
           }
         ]
       }

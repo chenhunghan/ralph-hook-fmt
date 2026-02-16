@@ -18,6 +18,7 @@ fn main() {
     }
 
     let debug = args.iter().any(|a| a == "--debug");
+    let project_only = args.iter().any(|a| a == "--project-only");
 
     // Read JSON input from stdin
     let mut input = String::new();
@@ -46,7 +47,7 @@ fn main() {
     }
 
     // Format the file
-    let result = format_file(&file_path);
+    let result = format_file(&file_path, project_only);
 
     // Build the response message
     let message = format!("[ralph-hook-fmt] {}", result.message);

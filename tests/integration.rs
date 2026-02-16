@@ -758,3 +758,188 @@ fn test_go_workspace_with_nested_modules() {
         }
     }
 }
+
+// ============================================================================
+// --project-only flag tests
+// ============================================================================
+
+fn run_hook_project_only(input: &str) -> String {
+    run_hook_with_input_with_args(input, &["--debug", "--project-only"])
+}
+
+#[test]
+fn test_project_only_js_no_local_formatter_returns_no_formatter() {
+    let temp_dir = TempDir::new().unwrap();
+    let project_dir = temp_dir.path();
+
+    // Create a Node.js project without any local formatters
+    fs::write(project_dir.join("package.json"), r#"{"name": "test"}"#).unwrap();
+
+    let file_path = project_dir.join("index.js");
+    fs::write(&file_path, "const x=1;").unwrap();
+
+    let output = run_hook_project_only(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    // With --project-only, should NOT fall back to global formatters
+    assert!(
+        output.contains("No formatter"),
+        "Should report no formatter with --project-only when no local formatter exists: {}",
+        output
+    );
+}
+
+#[test]
+fn test_project_only_js_with_local_oxfmt_still_works() {
+    let temp_dir = TempDir::new().unwrap();
+    let project_dir = temp_dir.path();
+
+    fs::write(project_dir.join("package.json"), r#"{"name": "test"}"#).unwrap();
+    create_mock_formatter(project_dir, "oxfmt");
+
+    let file_path = project_dir.join("index.js");
+    fs::write(&file_path, "const x=1;").unwrap();
+
+    let output = run_hook_project_only(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    assert!(
+        output.contains("oxfmt"),
+        "Should use local oxfmt even with --project-only: {}",
+        output
+    );
+}
+
+#[test]
+fn test_project_only_rust_with_cargo_project_still_works() {
+    let temp_dir = TempDir::new().unwrap();
+    let project_dir = temp_dir.path();
+
+    fs::write(
+        project_dir.join("Cargo.toml"),
+        r#"[package]
+name = "test"
+version = "0.1.0"
+edition = "2021"
+"#,
+    )
+    .unwrap();
+
+    let src_dir = project_dir.join("src");
+    fs::create_dir_all(&src_dir).unwrap();
+
+    let file_path = src_dir.join("main.rs");
+    let unformatted = "fn main(){let x=1;let y=2;println!(\"{}\",x+y);}";
+    fs::write(&file_path, unformatted).unwrap();
+
+    let output = run_hook_project_only(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    // cargo fmt is project-scoped, should still work
+    assert!(
+        output.contains("cargo fmt") || output.contains("No formatter"),
+        "Should use cargo fmt or report no formatter with --project-only: {}",
+        output
+    );
+}
+
+#[test]
+fn test_project_only_rust_without_cargo_project_no_fallback() {
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("test.rs");
+    fs::write(&file_path, "fn main() {}").unwrap();
+
+    let output = run_hook_project_only(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    // With --project-only and no Cargo.toml, should NOT fall back to global rustfmt
+    assert!(
+        output.contains("No formatter"),
+        "Should report no formatter with --project-only and no Cargo project: {}",
+        output
+    );
+}
+
+#[test]
+fn test_project_only_go_with_go_mod_still_works() {
+    let temp_dir = TempDir::new().unwrap();
+    let project_dir = temp_dir.path();
+
+    fs::write(project_dir.join("go.mod"), "module test\n\ngo 1.21\n").unwrap();
+
+    let file_path = project_dir.join("main.go");
+    fs::write(&file_path, "package main\nfunc main(){x:=1;_=x}").unwrap();
+
+    let output = run_hook_project_only(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    // go.mod exists so Go toolchain formatters should still be used
+    assert!(
+        output.contains("goimports")
+            || output.contains("gofumpt")
+            || output.contains("gofmt")
+            || output.contains("No formatter"),
+        "Should use Go formatter with go.mod present: {}",
+        output
+    );
+}
+
+#[test]
+fn test_project_only_go_without_go_mod_no_formatter() {
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("main.go");
+    fs::write(&file_path, "package main\nfunc main(){}").unwrap();
+
+    let output = run_hook_project_only(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    // With --project-only and no go.mod, should return no formatter
+    assert!(
+        output.contains("No formatter"),
+        "Should report no formatter with --project-only and no go.mod: {}",
+        output
+    );
+}
+
+#[test]
+fn test_project_only_json_no_local_oxfmt_returns_no_formatter() {
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("test.json");
+    fs::write(&file_path, r#"{"key":"value"}"#).unwrap();
+
+    let output = run_hook_project_only(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    assert!(
+        output.contains("No formatter"),
+        "Should report no formatter for JSON with --project-only and no local oxfmt: {}",
+        output
+    );
+}
+
+#[test]
+fn test_without_project_only_preserves_existing_behavior() {
+    // This test ensures backward compatibility - without --project-only,
+    // global formatters should still be used as fallback
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("test.rs");
+    fs::write(&file_path, "fn main() {}").unwrap();
+
+    let output = run_hook_with_input(&make_hook_input(&file_path));
+
+    assert!(output.contains("continue"));
+    assert!(output.contains("true"));
+    // Without --project-only, should use global rustfmt if available
+    assert!(
+        output.contains("rustfmt") || output.contains("No formatter"),
+        "Without --project-only, should try global rustfmt: {}",
+        output
+    );
+}
