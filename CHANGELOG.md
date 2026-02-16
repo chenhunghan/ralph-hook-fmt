@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.5.1...ralph-hook-fmt-v0.6.0) (2026-02-16)
+
+
+### Features
+
+* add --project-only flag to skip global formatter fallbacks ([cbfe153](https://github.com/chenhunghan/ralph-hook-fmt/commit/cbfe1538ae79e5af6e1739c541d17aae470c83fa))
+
 ## [0.5.1](https://github.com/chenhunghan/ralph-hook-fmt/compare/ralph-hook-fmt-v0.5.0...ralph-hook-fmt-v0.5.1) (2026-02-07)
 
 
