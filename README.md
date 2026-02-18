@@ -33,7 +33,7 @@ See lint hook: [ralph-hook-lint](https://github.com/chenhunghan/ralph-hook-lint)
 ## Installation
 
 ```bash
-claude plugin marketplace add chenhunghan/ralph-hook-fmt
+claude plugin marketplace add https://github.com/chenhunghan/ralph-hook-fmt.git
 claude plugin install ralph-hook-fmt
 ```
 
